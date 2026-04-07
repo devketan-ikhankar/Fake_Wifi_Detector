@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scan History - WiFi Defender</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .navbar h1 {
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .navbar-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+        .navbar a:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        .page-header {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+        .page-header h2 {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .page-header p {
+            color: #666;
+            font-size: 14px;
+        }
+        .history-list {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+        }
+        .scan-item {
+            border-bottom: 1px solid #e0e0e0;
+            padding: 20px 0;
+        }
+        .scan-item:last-child {
+            border-bottom: none;
+        }
+        .scan-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .scan-date {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+        .scan-stats {
+            display: flex;
+            gap: 15px;
+            font-size: 14px;
+        }
+        .stat-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+        .networks-badge {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        .threats-badge {
+            background: #ffebee;
+            color: #d32f2f;
+        }
+        .safe-badge {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+        .detection-list {
+            margin-top: 10px;
+            padding-left: 20px;
+        }
+        .detection-item {
+            color: #666;
+            font-size: 13px;
+            padding: 5px 0;
+        }
+        .detection-item strong {
+            color: #333;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        .empty-state h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        .empty-state a {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h1><span>🛡️</span> WiFi Defender</h1>
+        <div class="navbar-right">
+            <a href="/dashboard">Dashboard</a>
+            <a href="/logout">Logout</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="page-header">
+            <h2>📊 Scan History</h2>
+            <p>Review your previous WiFi security scans and detected threats</p>
+        </div>
+
+        <div class="history-list">
+            {% if scans %}
+                {% for scan in scans %}
+                <div class="scan-item">
+                    <div class="scan-header">
+                        <div class="scan-date">🕒 {{ scan[2] }}</div>
+                        <div class="scan-stats">
+                            <span class="stat-badge networks-badge">{{ scan[3] }} Networks</span>
+                            <span class="stat-badge threats-badge">{{ scan[4] }} Threats</span>
+                        </div>
+                    </div>
+                    
+                    {% if detections[scan[0]] %}
+                    <div class="detection-list">
+                        {% for detection in detections[scan[0]] %}
+                        <div class="detection-item">
+                            <strong>{{ detection[2] }}</strong> ({{ detection[3] }}) - 
+                            <span style="color: #d32f2f;">{{ detection[5] }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">📭</div>
+                    <h3>No scans yet</h3>
+                    <p>Start your first WiFi security scan to see results here</p>
+                    <a href="/dashboard">Run a Scan</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

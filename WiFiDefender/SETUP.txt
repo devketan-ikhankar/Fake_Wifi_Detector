@@ -1,0 +1,142 @@
+╔═══════════════════════════════════════════════════════════════╗
+║          WiFi Defender - COMPLETE SETUP GUIDE                 ║
+╚═══════════════════════════════════════════════════════════════╝
+
+🔧 STEP-BY-STEP INSTALLATION
+═══════════════════════════════════════════════════════════════
+
+STEP 1: Extract Files
+----------------------
+Extract ALL files from the zip to a folder.
+You should see this structure:
+
+    WiFiDefender/
+    ├── app.py
+    ├── wifidefender.db
+    ├── templates/
+    │   ├── login.html
+    │   ├── register.html
+    │   ├── dashboard.html
+    │   └── history.html
+    ├── SETUP.txt (this file)
+    └── requirements.txt
+
+⚠️  CRITICAL: The "templates" folder MUST be in the same 
+    directory as app.py or you'll get FileNotFoundError!
+
+
+STEP 2: Install Python Dependencies
+------------------------------------
+Open Command Prompt or Terminal in the WiFiDefender folder:
+
+    pip install flask flask-cors
+
+Or use the requirements.txt:
+
+    pip install -r requirements.txt
+
+
+STEP 3: Run the Application
+----------------------------
+Windows:
+    python app.py
+
+Mac/Linux:
+    sudo python3 app.py
+    (sudo needed for WiFi scanning)
+
+
+STEP 4: Open in Browser
+------------------------
+Navigate to:
+    http://localhost:5000
+
+You should see the login page!
+
+
+📋 FIRST TIME SETUP
+═══════════════════════════════════════════════════════════════
+
+1. Click "Create one" to register
+2. Fill in:
+   - Username: yourname
+   - Email: you@example.com
+   - Password: (choose a password)
+   - Confirm Password: (same password)
+3. Click "Create Account"
+4. Login with your credentials
+5. Click "Start WiFi Scan"
+
+
+🐛 TROUBLESHOOTING
+═══════════════════════════════════════════════════════════════
+
+ERROR: "FileNotFoundError: templates/login.html"
+SOLUTION: Make sure templates folder is next to app.py
+
+ERROR: "No module named 'flask'"
+SOLUTION: Run: pip install flask flask-cors
+
+ERROR: "No networks found"
+SOLUTION: 
+  - Windows: Run Command Prompt as Administrator
+  - Mac: Use sudo python3 app.py
+  - Linux: Use sudo python3 app.py
+
+ERROR: "Address already in use"
+SOLUTION: Another app is using port 5000
+  - Close the other app
+  - Or change port in app.py (line 665): 
+    app.run(port=5001)
+
+
+📂 FILE DESCRIPTIONS
+═══════════════════════════════════════════════════════════════
+
+app.py              - Main Flask application
+wifidefender.db     - SQLite database (stores users & scans)
+templates/          - HTML files (REQUIRED for Flask)
+  ├── login.html        - Login page
+  ├── register.html     - Registration page
+  ├── dashboard.html    - WiFi scanner interface
+  └── history.html      - Scan history viewer
+
+
+✨ FEATURES
+═══════════════════════════════════════════════════════════════
+
+✓ User authentication with secure password hashing
+✓ Real WiFi network scanning (Windows/Mac/Linux)
+✓ 8 advanced threat detection algorithms:
+  - Deauth attack detection
+  - Evil twin detection
+  - Karma attack detection
+  - WPS vulnerability check
+  - Hidden SSID detection
+  - Channel hopping detection
+  - Beacon flooding detection
+  - Signal anomaly detection
+✓ Scan history with database storage
+✓ Beautiful, responsive web interface
+✓ Export scan results
+
+
+🔒 SECURITY NOTES
+═══════════════════════════════════════════════════════════════
+
+- Passwords are hashed using Werkzeug (bcrypt-like)
+- Session keys are randomly generated
+- All database queries use parameterized statements
+- CORS is enabled for API access
+
+
+📞 NEED HELP?
+═══════════════════════════════════════════════════════════════
+
+If you're still having issues:
+1. Make sure Python 3.7+ is installed
+2. Verify the templates folder exists
+3. Check you're in the right directory
+4. Try running as Administrator/sudo
+
+Happy scanning! 🛡️

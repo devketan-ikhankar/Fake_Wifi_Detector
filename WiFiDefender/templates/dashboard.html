@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FAKE WIFI DETECTOR 2.0 — LIVE BACKEND</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--ng:#00ff41;--eb:#00d4ff;--ra:#ff003c;--am:#ffb800;--pu:#9d00ff;
+  --bg:#020d0a;--bgp:#040f0d;--bgc:#061410;
+  --bng:rgba(0,255,65,.28);--beb:rgba(0,212,255,.28);--bra:rgba(255,0,60,.35);
+  --td:#336644;--tm:#558855}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Share Tech Mono',monospace;background:var(--bg);color:var(--ng);overflow-x:hidden;min-height:100vh;cursor:crosshair}
+#mc,#hc{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0}
+#mc{opacity:.06}#hc{opacity:.1}
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.04) 2px,rgba(0,0,0,.04) 4px);pointer-events:none;z-index:999}
+.cg{position:fixed;inset:0;background-image:linear-gradient(rgba(0,255,65,.022) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,65,.022) 1px,transparent 1px);background-size:40px 40px;z-index:0;pointer-events:none;animation:gp 8s ease-in-out infinite}
+@keyframes gp{0%,100%{opacity:1}50%{opacity:.4}}
+.aw{position:relative;z-index:10;min-height:100vh}
+
+/* HUD */
+.hud{display:flex;justify-content:space-between;align-items:center;padding:7px 20px;background:rgba(0,255,65,.03);border-bottom:1px solid var(--bng);font-size:10px;color:var(--tm);letter-spacing:1px;flex-wrap:wrap;gap:5px}
+.hl,.hr{display:flex;gap:14px;align-items:center}
+.hd{width:6px;height:6px;border-radius:50%;animation:bl 2s infinite}
+.hd.g{background:var(--ng);box-shadow:0 0 7px var(--ng)}
+.hd.r{background:var(--ra);box-shadow:0 0 7px var(--ra)}
+.hd.a{background:var(--am);box-shadow:0 0 7px var(--am)}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:.2}}
+.conn-badge{font-size:9px;padding:2px 8px;border-radius:2px;font-family:'Orbitron',monospace;letter-spacing:1px;transition:all .4s}
+.conn-badge.live{border:1px solid var(--ng);color:var(--ng);background:rgba(0,255,65,.08);box-shadow:0 0 8px rgba(0,255,65,.2);animation:livePulse 2s infinite}
+.conn-badge.demo{border:1px solid var(--am);color:var(--am);background:rgba(255,184,0,.06)}
+.conn-badge.err{border:1px solid var(--ra);color:var(--ra);background:rgba(255,0,60,.06)}
+@keyframes livePulse{0%,100%{box-shadow:0 0 6px rgba(0,255,65,.2)}50%{box-shadow:0 0 16px rgba(0,255,65,.5)}}
+
+/* HEADER */
+.hdr{text-align:center;padding:34px 20px 14px;position:relative}
+.hglow{position:absolute;top:0;left:50%;transform:translateX(-50%);width:700px;height:160px;background:radial-gradient(ellipse at center,rgba(0,255,65,.06) 0%,transparent 70%);pointer-events:none}
+.mt{font-family:'Orbitron',monospace;font-size:clamp(12px,2.2vw,23px);font-weight:900;color:var(--ng);text-shadow:0 0 10px var(--ng),0 0 28px var(--ng),0 0 55px rgba(0,255,65,.35);letter-spacing:3px;line-height:1.35;animation:tf 7s infinite}
+@keyframes tf{0%,93%,95%,100%{opacity:1}94%{opacity:.7}}
+.sw{margin-top:8px;height:20px;display:flex;align-items:center;justify-content:center}
+.st{font-size:clamp(9px,1.2vw,12px);color:var(--eb);letter-spacing:4px;text-shadow:0 0 10px var(--eb)}
+.cb{display:inline-block;width:8px;height:13px;background:var(--eb);margin-left:3px;animation:cbl 1s step-end infinite;vertical-align:middle;box-shadow:0 0 5px var(--eb)}
+@keyframes cbl{0%,100%{opacity:1}50%{opacity:0}}
+.bgs{display:flex;justify-content:center;gap:8px;margin-top:10px;flex-wrap:wrap}
+.bgx{font-size:9px;letter-spacing:2px;padding:2px 8px;border-radius:2px;font-family:'Orbitron',monospace}
+.bgg{border:1px solid var(--ng);color:var(--ng);background:rgba(0,255,65,.05)}
+.bgb{border:1px solid var(--eb);color:var(--eb);background:rgba(0,212,255,.05)}
+.bga{border:1px solid var(--am);color:var(--am);background:rgba(255,184,0,.05)}
+
+/* TABS */
+.tnav{display:flex;max-width:1600px;margin:14px auto 0;padding:0 20px;flex-wrap:wrap;gap:1px}
+.tbtn{font-family:'Orbitron',monospace;font-size:9px;letter-spacing:2px;padding:9px 16px;background:transparent;border:1px solid rgba(0,255,65,.18);color:var(--td);cursor:pointer;transition:all .25s}
+.tbtn:first-child{border-radius:4px 0 0 0}
+.tbtn.active{background:rgba(0,255,65,.07);color:var(--ng);border-color:var(--ng);text-shadow:0 0 7px var(--ng)}
+.tbtn:hover:not(.active){background:rgba(0,255,65,.04);color:var(--ng)}
+.tc{display:none}.tc.active{display:block}
+
+/* GRID LAYOUT */
+.mg{display:grid;grid-template-columns:250px 1fr 250px;gap:12px;padding:12px 20px;max-width:1600px;margin:0 auto}
+@media(max-width:1100px){.mg{grid-template-columns:1fr}}
+
+/* PANEL */
+.pn{background:var(--bgp);border:1px solid var(--bng);border-radius:4px;padding:12px;position:relative;overflow:hidden}
+.pn::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--ng),transparent);opacity:.6}
+.pn.blue-p::before{background:linear-gradient(90deg,transparent,var(--eb),transparent)}
+.pn.red-p{border-color:var(--bra)}.pn.red-p::before{background:linear-gradient(90deg,transparent,var(--ra),transparent)}
+.pt{font-family:'Orbitron',monospace;font-size:9px;letter-spacing:3px;color:var(--ng);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.pt::before{content:'▶';font-size:7px}
+.pt.b{color:var(--eb)}.pt.b::before{color:var(--eb)}
+.pt.r{color:var(--ra)}.pt.r::before{color:var(--ra)}
+
+/* STAT ROW */
+.sr{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(0,255,65,.05);font-size:10px}
+.sr:last-child{border-bottom:none}
+.sl{color:var(--td)}.sv{color:var(--ng);font-weight:bold;text-shadow:0 0 5px var(--ng)}
+.sv.b{color:var(--eb);text-shadow:0 0 5px var(--eb)}
+.sv.r{color:var(--ra);text-shadow:0 0 5px var(--ra);animation:ap 1.5s infinite}
+.sv.a{color:var(--am);text-shadow:0 0 5px var(--am)}
+@keyframes ap{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* SIGNAL GRAPH */
+.sgg{display:flex;align-items:flex-end;gap:2px;height:26px;margin-top:10px}
+.sgb{flex:1;background:var(--ng);border-radius:1px;opacity:.55;box-shadow:0 0 3px var(--ng);animation:sa .8s ease-in-out infinite alternate}
+.sgb:nth-child(odd){animation-delay:.2s}
+.sgb:nth-child(3n){background:var(--eb);box-shadow:0 0 3px var(--eb);animation-delay:.4s}
+@keyframes sa{from{transform:scaleY(.3)}to{transform:scaleY(1)}}
+
+/* RADAR */
+.rw{position:relative;width:250px;height:250px;flex-shrink:0}
+.ro{width:100%;height:100%;border-radius:50%;border:1px solid rgba(0,255,65,.28);position:relative;background:radial-gradient(ellipse at center,rgba(0,255,65,.04) 0%,transparent 70%);box-shadow:0 0 15px rgba(0,255,65,.07),inset 0 0 15px rgba(0,255,65,.03)}
+.rr{position:absolute;border-radius:50%;border:1px solid rgba(0,255,65,.1);top:50%;left:50%;transform:translate(-50%,-50%)}
+.rr:nth-child(1){width:25%;height:25%}.rr:nth-child(2){width:50%;height:50%}.rr:nth-child(3){width:75%;height:75%}
+.rch,.rcv{position:absolute;background:rgba(0,255,65,.07);top:50%;left:50%}
+.rch{width:100%;height:1px;transform:translate(-50%,-50%)}.rcv{width:1px;height:100%;transform:translate(-50%,-50%)}
+.rsp{position:absolute;inset:0;border-radius:50%;animation:rs 3s linear infinite;overflow:hidden}
+.rsp::after{content:'';position:absolute;top:50%;left:50%;width:50%;height:2px;background:linear-gradient(90deg,transparent,rgba(0,255,65,.85));transform-origin:left center;transform:rotate(0deg) translateY(-50%);box-shadow:0 0 8px var(--ng)}
+.rsf{position:absolute;top:50%;left:50%;width:50%;height:50%;transform-origin:0% 100%;background:conic-gradient(from 0deg,transparent 300deg,rgba(0,255,65,.05) 360deg);border-radius:0 50% 0 0;animation:rs 3s linear infinite}
+@keyframes rs{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.rb{position:absolute;width:8px;height:8px;border-radius:50%;transform:translate(-50%,-50%)}
+.rb::before{content:'';width:100%;height:100%;border-radius:50%;display:block;animation:bp 2s infinite}
+.rb.g::before{background:var(--ng);box-shadow:0 0 7px var(--ng)}
+.rb.b::before{background:var(--eb);box-shadow:0 0 7px var(--eb)}
+.rb.r::before{background:var(--ra);box-shadow:0 0 11px var(--ra)}
+@keyframes bp{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.9);opacity:.35}}
+.rlab{position:absolute;bottom:-26px;left:50%;transform:translateX(-50%);font-size:9px;letter-spacing:3px;color:var(--td);white-space:nowrap}
+
+/* CENTER */
+.cp{display:flex;flex-direction:column;align-items:center;gap:14px}
+
+/* SCAN BTN */
+.sbw{display:flex;flex-direction:column;align-items:center;gap:10px;width:100%;margin-top:22px}
+.sb{position:relative;background:transparent;border:2px solid var(--ng);color:var(--ng);font-family:'Orbitron',monospace;font-size:12px;font-weight:700;letter-spacing:4px;padding:13px 40px;cursor:crosshair;transition:all .3s;text-transform:uppercase;box-shadow:0 0 16px rgba(0,255,65,.22);clip-path:polygon(8px 0%,calc(100% - 8px) 0%,100% 8px,100% calc(100% - 8px),calc(100% - 8px) 100%,8px 100%,0% calc(100% - 8px),0% 8px);animation:bi 3s ease-in-out infinite;overflow:hidden}
+.sb::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(0,255,65,.15),transparent);transition:left .5s}
+.sb:hover::before{left:100%}
+.sb:hover{background:rgba(0,255,65,.08);box-shadow:0 0 35px rgba(0,255,65,.5);text-shadow:0 0 10px var(--ng);transform:scale(1.03)}
+.sb:active{transform:scale(.97)}.sb:disabled{opacity:.6;cursor:not-allowed}
+.sb.scanning{border-color:var(--eb);color:var(--eb);animation:sp .8s ease-in-out infinite}
+.sb.live-mode{border-color:var(--am);color:var(--am);animation:lm 2s infinite}
+@keyframes bi{0%,100%{box-shadow:0 0 16px rgba(0,255,65,.22)}50%{box-shadow:0 0 30px rgba(0,255,65,.42)}}
+@keyframes sp{0%,100%{box-shadow:0 0 16px rgba(0,212,255,.42)}50%{box-shadow:0 0 50px rgba(0,212,255,.7)}}
+@keyframes lm{0%,100%{box-shadow:0 0 16px rgba(255,184,0,.3)}50%{box-shadow:0 0 35px rgba(255,184,0,.6)}}
+.si{display:inline-block;margin-right:7px;animation:isp 4s linear infinite paused}
+.scanning .si,.live-mode .si{animation-play-state:running}
+@keyframes isp{to{transform:rotate(360deg)}}
+
+/* LIVE TOGGLE */
+.live-toggle-row{display:flex;align-items:center;gap:10px;font-size:10px;color:var(--td);margin-top:6px}
+.toggle-wrap{position:relative;width:36px;height:18px;cursor:pointer}
+.toggle-inp{opacity:0;width:0;height:0;position:absolute}
+.toggle-slider{position:absolute;inset:0;background:rgba(0,255,65,.1);border:1px solid var(--bng);border-radius:9px;transition:.3s}
+.toggle-slider::before{content:'';position:absolute;height:12px;width:12px;left:2px;bottom:2px;background:var(--td);border-radius:50%;transition:.3s}
+.toggle-inp:checked+.toggle-slider{background:rgba(0,255,65,.2);border-color:var(--ng)}
+.toggle-inp:checked+.toggle-slider::before{transform:translateX(18px);background:var(--ng);box-shadow:0 0 6px var(--ng)}
+
+/* PROGRESS */
+.pw{width:100%;display:none}.pw.v{display:block}
+.pl{display:flex;justify-content:space-between;font-size:10px;color:var(--td);margin-bottom:4px}
+.pb{width:100%;height:4px;background:rgba(0,255,65,.07);border:1px solid rgba(0,255,65,.15);border-radius:1px;overflow:hidden}
+.pf{height:100%;background:linear-gradient(90deg,var(--ng),var(--eb));box-shadow:0 0 7px var(--ng);transition:width .2s;width:0;position:relative}
+
+/* CONSOLE */
+.cnp{background:var(--bgp);border:1px solid var(--bng);border-radius:4px;overflow:hidden;width:100%}
+.cnh{display:flex;align-items:center;gap:5px;padding:6px 11px;background:rgba(0,255,65,.03);border-bottom:1px solid var(--bng);font-size:9px;letter-spacing:2px;color:var(--td)}
+.cd{width:7px;height:7px;border-radius:50%}
+.cd.rd{background:#ff5f57}.cd.yl{background:#ffbd2e}.cd.gn{background:#28ca42}
+.cnb{padding:7px 11px;height:160px;overflow-y:auto;font-size:10px;line-height:1.75;scrollbar-width:thin;scrollbar-color:var(--ng) transparent}
+.cnb::-webkit-scrollbar{width:3px}.cnb::-webkit-scrollbar-thumb{background:var(--ng)}
+.ll{display:flex;gap:6px;opacity:0;animation:la .25s forwards}
+@keyframes la{to{opacity:1}}
+.lt{color:var(--td);flex-shrink:0}
+.li{color:var(--eb);flex-shrink:0}.lo{color:var(--ng);flex-shrink:0}.lw{color:var(--am);flex-shrink:0}.la2{color:var(--ra);flex-shrink:0;animation:ap .9s infinite}
+.lm{color:#99ddaa}
+
+/* RESULTS */
+.res-sec{padding:0 20px 18px;max-width:1600px;margin:0 auto;display:none}
+.res-sec.v{display:block}
+.col{border:1px solid var(--bng);border-radius:4px;margin-bottom:12px;overflow:hidden;background:var(--bgp)}
+.col.danger{border-color:var(--bra)}
+.col::before{content:'';display:block;height:2px;background:linear-gradient(90deg,transparent,var(--ng),transparent)}
+.col.danger::before{background:linear-gradient(90deg,transparent,var(--ra),transparent)}
+.ch2{display:flex;justify-content:space-between;align-items:center;padding:11px 16px;cursor:pointer;background:rgba(0,255,65,.02);border-bottom:1px solid rgba(0,255,65,.07);transition:background .2s;position:relative;overflow:hidden}
+.col.danger .ch2{background:rgba(255,0,60,.02)}
+.ch2::after{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--ng);box-shadow:0 0 7px var(--ng)}
+.col.danger .ch2::after{background:var(--ra);box-shadow:0 0 7px var(--ra)}
+.ch2:hover{background:rgba(0,255,65,.05)}
+.ctitle{font-family:'Orbitron',monospace;font-size:10px;letter-spacing:3px;display:flex;align-items:center;gap:8px}
+.ctitle.dt{color:var(--ra);text-shadow:0 0 7px var(--ra)}
+.cnb2{font-size:9px;padding:2px 7px;border-radius:2px}
+.cnb2.g{border:1px solid var(--ng);color:var(--ng);background:rgba(0,255,65,.08)}
+.cnb2.r{border:1px solid var(--ra);color:var(--ra);background:rgba(255,0,60,.08);animation:ap 1s infinite}
+.ca{font-size:11px;transition:transform .3s;color:var(--ng)}
+.col.collapsed .ca{transform:rotate(-90deg)}
+.cb3{padding:12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;max-height:1400px;overflow:hidden;transition:max-height .5s,padding .3s}
+.col.collapsed .cb3{max-height:0;padding-top:0;padding-bottom:0}
+
+/* NET CARD */
+.nc{background:var(--bgc);border:1px solid rgba(0,255,65,.16);border-radius:4px;padding:11px;position:relative;overflow:hidden;transition:all .3s;opacity:0;animation:cap .35s forwards;clip-path:polygon(0 0,calc(100% - 9px) 0,100% 9px,100% 100%,9px 100%,0 calc(100% - 9px));cursor:pointer}
+@keyframes cap{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+.nc:hover{border-color:rgba(0,255,65,.42);box-shadow:0 0 14px rgba(0,255,65,.07);transform:translateY(-2px)}
+.nc.fake{border-color:rgba(255,0,60,.38);background:rgba(255,0,60,.03);animation:cap .35s forwards,fp 2s infinite}
+@keyframes fp{0%,100%{box-shadow:0 0 7px rgba(255,0,60,.15);border-color:rgba(255,0,60,.38)}50%{box-shadow:0 0 22px rgba(255,0,60,.42);border-color:rgba(255,0,60,.75)}}
+.nc.fake::before{content:'';position:absolute;top:0;left:0;width:100%;height:2px;background:linear-gradient(90deg,transparent 0%,var(--ra) 50%,transparent 100%);animation:sl 1.5s linear infinite}
+@keyframes sl{0%{background-position:-200% 0}100%{background-position:200% 0}}
+.ncc{position:absolute;top:0;right:0;width:9px;height:9px;border-top:2px solid var(--ng);border-right:2px solid var(--ng)}
+.nc.fake .ncc{border-color:var(--ra)}
+.ssid{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:var(--ng);text-shadow:0 0 7px rgba(0,255,65,.55);letter-spacing:1px;display:flex;align-items:center;gap:5px;margin-bottom:7px}
+.nc.fake .ssid{color:var(--ra);text-shadow:0 0 7px rgba(255,0,60,.55)}
+.wi{font-size:14px;animation:wp 2s infinite}
+.nc.fake .wi{animation:wpr 1s infinite}
+@keyframes wp{0%,100%{opacity:1}50%{opacity:.5}}
+@keyframes wpr{0%,100%{opacity:1}50%{opacity:.35}}
+.br{display:flex;gap:3px;flex-wrap:wrap;margin-bottom:7px}
+.eb3{font-size:8px;padding:1px 5px;border-radius:2px;letter-spacing:1px;font-family:'Orbitron',monospace}
+.eb3.w3{border:1px solid var(--ng);color:var(--ng);background:rgba(0,255,65,.07)}
+.eb3.w2{border:1px solid var(--eb);color:var(--eb);background:rgba(0,212,255,.07)}
+.eb3.op{border:1px solid var(--ra);color:var(--ra);background:rgba(255,0,60,.07);animation:ap 1.5s infinite}
+.eb3.wep{border:1px solid var(--am);color:var(--am);background:rgba(255,184,0,.07)}
+.cm2{display:grid;grid-template-columns:1fr 1fr;gap:4px 8px;margin-bottom:7px}
+.mi{font-size:9px;color:var(--td)}.mi span{color:var(--tm)}
+.sirow{margin-bottom:7px}
+.sil{font-size:9px;color:var(--td);display:flex;justify-content:space-between;margin-bottom:3px}.sil span{color:var(--ng)}
+.sib{height:3px;background:rgba(0,255,65,.07);border-radius:2px;overflow:hidden}
+.sif{height:100%;border-radius:2px;transition:width 1.2s;width:0}
+.rrow{display:flex;align-items:center;gap:7px}
+.rl2{font-size:9px;color:var(--td);flex-shrink:0}
+.rm{flex:1;height:4px;background:rgba(255,255,255,.04);border-radius:2px;overflow:hidden}
+.rf{height:100%;border-radius:2px;transition:width 1.2s;width:0}
+.rf.lo{background:var(--ng);box-shadow:0 0 3px var(--ng)}
+.rf.me{background:var(--am);box-shadow:0 0 3px var(--am)}
+.rf.hi{background:var(--ra);box-shadow:0 0 4px var(--ra);animation:rp 1s infinite}
+@keyframes rp{0%,100%{box-shadow:0 0 4px var(--ra)}50%{box-shadow:0 0 10px var(--ra)}}
+.rscore{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;flex-shrink:0;width:32px;text-align:right}
+.rscore.lo{color:var(--ng)}.rscore.me{color:var(--am)}.rscore.hi{color:var(--ra);animation:ap .9s infinite}
+.ftag{position:absolute;top:7px;right:7px;background:var(--ra);color:#fff;font-family:'Orbitron',monospace;font-size:7px;letter-spacing:2px;padding:2px 5px;border-radius:2px;box-shadow:0 0 10px rgba(255,0,60,.45);animation:ap 1.5s infinite}
+.det-reasons{margin-top:6px;font-size:9px;display:flex;flex-direction:column;gap:2px}
+.dr{color:var(--ra);display:flex;align-items:flex-start;gap:4px;line-height:1.5}
+.dr::before{content:'›';flex-shrink:0}
+
+/* DETECTION ENGINE PANEL */
+.det-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:8px;margin-top:12px}
+.dcard{background:var(--bgc);border:1px solid rgba(0,255,65,.13);border-radius:4px;padding:11px;position:relative;transition:all .3s;clip-path:polygon(0 0,calc(100% - 7px) 0,100% 7px,100% 100%,0 100%)}
+.dcard::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--td);transition:background .4s}
+.dcard.run::before{background:var(--eb);animation:bp2 .8s infinite}
+@keyframes bp2{0%,100%{opacity:1}50%{opacity:.3}}
+.dcard.clear::before{background:var(--ng)}
+.dcard.warn{border-color:rgba(255,184,0,.3);background:rgba(255,184,0,.02)}.dcard.warn::before{background:var(--am)}
+.dcard.threat{border-color:var(--bra);background:rgba(255,0,60,.03);animation:dtp 2s infinite}.dcard.threat::before{background:var(--ra)}
+@keyframes dtp{0%,100%{box-shadow:0 0 8px rgba(255,0,60,.1)}50%{box-shadow:0 0 22px rgba(255,0,60,.28)}}
+.dct{font-family:'Orbitron',monospace;font-size:9px;letter-spacing:1.5px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;color:var(--tm)}
+.dcs{font-size:8px;padding:2px 6px;border-radius:2px;letter-spacing:1px;transition:all .3s}
+.dcs.idle{border:1px solid var(--td);color:var(--td)}
+.dcs.run{border:1px solid var(--eb);color:var(--eb);background:rgba(0,212,255,.07);animation:ap .8s infinite}
+.dcs.ok{border:1px solid var(--ng);color:var(--ng);background:rgba(0,255,65,.07)}
+.dcs.warn{border:1px solid var(--am);color:var(--am);background:rgba(255,184,0,.07)}
+.dcs.alert{border:1px solid var(--ra);color:var(--ra);background:rgba(255,0,60,.07);animation:ap .7s infinite}
+.ddesc{font-size:9px;color:var(--td);line-height:1.6;margin-bottom:6px}
+.dbar-bg{height:3px;background:rgba(255,255,255,.04);border-radius:2px;overflow:hidden;margin-bottom:5px}
+.dbar{height:100%;border-radius:2px;transition:width 1.2s;width:0}
+.dbar.g{background:var(--ng);box-shadow:0 0 3px var(--ng)}.dbar.b{background:var(--eb)}.dbar.a{background:var(--am)}.dbar.r{background:var(--ra);box-shadow:0 0 4px var(--ra)}
+.dfind{font-size:9px;color:var(--td);min-height:14px;line-height:1.5;transition:color .3s}
+.dfind.ok-t{color:var(--ng)}.dfind.warn-t{color:var(--am)}.dfind.alert-t{color:var(--ra);animation:ap 1.5s infinite}
+
+/* ALERT BANNER */
+.ab{max-width:1600px;margin:0 auto 12px;padding:10px 16px;background:rgba(255,0,60,.07);border:1px solid var(--bra);border-radius:4px;display:none;align-items:center;gap:10px;animation:abp 2s infinite}
+.ab.v{display:flex}
+@keyframes abp{0%,100%{box-shadow:0 0 7px rgba(255,0,60,.15)}50%{box-shadow:0 0 22px rgba(255,0,60,.35)}}
+.abicon{font-size:18px;color:var(--ra);animation:ap 1s infinite;flex-shrink:0}
+.abt{font-family:'Orbitron',monospace;font-size:11px;color:var(--ra);letter-spacing:2px}
+.abd{font-size:10px;color:rgba(255,0,60,.6);margin-top:2px}
+
+/* THREAT METER */
+.tmw{margin:8px 0}
+.tml{display:flex;justify-content:space-between;font-size:10px;margin-bottom:4px;color:var(--td)}
+.tmv{color:var(--ra);text-shadow:0 0 5px var(--ra)}
+.tbg{height:7px;background:rgba(255,0,60,.07);border:1px solid rgba(255,0,60,.15);border-radius:1px;overflow:hidden}
+.tbf{height:100%;background:linear-gradient(90deg,var(--ng),var(--am),var(--ra));box-shadow:0 0 5px var(--ra);transition:width 1s;width:0}
+
+/* CHANNEL MAP */
+.chm{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:8px}
+.cbw{text-align:center}
+.cbb{height:36px;background:rgba(0,212,255,.03);border:1px solid rgba(0,212,255,.1);border-radius:2px;display:flex;align-items:flex-end;overflow:hidden}
+.cb2{width:100%;transition:height 1s;height:0;background:linear-gradient(0deg,var(--eb),rgba(0,212,255,.2));box-shadow:0 0 3px var(--eb)}
+.cb2.act{background:linear-gradient(0deg,var(--ra),rgba(255,0,60,.2));box-shadow:0 0 3px var(--ra)}
+.cbl{font-size:8px;color:var(--td);margin-top:2px}
+
+/* ENC DIST */
+.er{display:flex;align-items:center;gap:6px;padding:4px 0;font-size:10px}
+.et{width:40px;color:var(--td)}.eb2{flex:1;height:3px;background:rgba(0,255,65,.07);border-radius:2px;overflow:hidden}
+.ef{height:100%;border-radius:2px;transition:width 1.5s;width:0}
+.ef.w3{background:var(--ng);box-shadow:0 0 3px var(--ng)}.ef.w2{background:var(--eb);box-shadow:0 0 3px var(--eb)}.ef.op{background:var(--ra);box-shadow:0 0 3px var(--ra)}
+.ec{width:14px;text-align:right;color:var(--ng);font-size:10px}
+
+/* LIVE STATUS TICKER */
+.ticker{background:rgba(0,212,255,.03);border:1px solid var(--beb);border-radius:4px;padding:6px 12px;margin-bottom:12px;font-size:10px;color:var(--eb);display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+.tick-item{display:flex;gap:5px;align-items:center}
+.tick-dot{width:5px;height:5px;border-radius:50%;background:var(--eb);animation:bl 1.5s infinite}
+
+/* MODAL */
+.mbg{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:1000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.mbg.v{display:flex}
+.modal{background:var(--bgp);border:1px solid var(--bng);border-radius:6px;padding:22px;max-width:580px;width:92%;max-height:85vh;overflow-y:auto;position:relative}
+.modal.fake-m{border-color:var(--bra)}
+.mclose{position:absolute;top:10px;right:14px;background:transparent;border:1px solid rgba(0,255,65,.28);color:var(--ng);font-family:'Orbitron',monospace;font-size:9px;padding:3px 9px;cursor:pointer;border-radius:2px;letter-spacing:2px}
+.mtitle{font-family:'Orbitron',monospace;font-size:13px;color:var(--ng);text-shadow:0 0 8px var(--ng);margin-bottom:14px;letter-spacing:2px}
+.fake-m .mtitle{color:var(--ra);text-shadow:0 0 8px var(--ra)}
+.msec{margin-bottom:12px}
+.mstitle{font-family:'Orbitron',monospace;font-size:9px;letter-spacing:3px;color:var(--eb);margin-bottom:6px;border-bottom:1px solid rgba(0,212,255,.12);padding-bottom:3px}
+.mr{display:flex;justify-content:space-between;font-size:10px;padding:3px 0;border-bottom:1px solid rgba(0,255,65,.04)}
+.mr:last-child{border-bottom:none}
+.mk{color:var(--td)}.mv{color:var(--ng);text-align:right}
+.mv.red{color:var(--ra)}.mv.amber{color:var(--am)}.mv.blue{color:var(--eb)}
+
+/* FOOTER */
+.fhud{padding:8px 20px;border-top:1px solid var(--bng);display:flex;justify-content:space-between;align-items:center;font-size:9px;color:var(--td);letter-spacing:2px;flex-wrap:wrap;gap:5px;margin-top:14px}
+
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:rgba(0,255,65,.22);border-radius:2px}
+@media(max-width:768px){.mg{padding:8px 12px;grid-template-columns:1fr}.res-sec{padding:0 12px 12px}}
+</style>
+</head>
+<body>
+<canvas id="mc"></canvas><canvas id="hc"></canvas>
+<div class="cg"></div>
+<div class="aw">
+
+<!-- HUD BAR -->
+<div class="hud">
+  <div class="hl">
+    <div class="hd g"></div>
+    <span style="color:var(--ng)">SYS_ONLINE</span>
+    <span style="color:var(--td)">|</span>
+    <span>KERNEL v4.21.3 · wlan0</span>
+    <span style="color:var(--td)">|</span>
+    <span id="conn-badge" class="conn-badge demo">◉ DEMO MODE</span>
+  </div>
+  <div class="hr">
+    <span id="lclock">00:00:00</span>
+    <span style="color:var(--td)">|</span>
+    <span>THREAT: <span id="tlt" style="color:var(--ng)">STANDBY</span></span>
+    <span style="color:var(--td)">|</span>
+    <span id="last-upd">LAST SCAN: --</span>
+  </div>
+</div>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hglow"></div>
+  <div class="mt">FAKE WIFI DETECTOR 2.0<br><span style="font-size:.58em;letter-spacing:5px;font-weight:400">— LIVE BACKEND CONNECTED —</span></div>
+  <div class="sw"><span class="st" id="stext"></span><span class="cb"></span></div>
+  <div class="bgs">
+    <span class="bgx bgg">◆ REAL WiFi DATA</span>
+    <span class="bgx bgb">◆ 8 DETECTION ENGINES</span>
+    <span class="bgx bga">◆ AUTO REFRESH 5s</span>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tnav">
+  <button class="tbtn active" onclick="switchTab('scan')">⌖ SCANNER</button>
+  <button class="tbtn" onclick="switchTab('det')">🔬 ENGINE RESULTS</button>
+  <button class="tbtn" onclick="switchTab('intel')">📡 NETWORK INTEL</button>
+</div>
+
+<!-- ═══════════ TAB: SCANNER ═══════════ -->
+<div class="tc active" id="tab-scan">
+<div class="mg">
+
+  <!-- LEFT STATS -->
+  <div>
+    <div class="pn">
+      <div class="pt">NETWORK TELEMETRY</div>
+      <div class="sr"><span class="sl">NETWORKS FOUND</span><span class="sv" id="sf">0</span></div>
+      <div class="sr"><span class="sl">ROGUE APs</span><span class="sv r" id="sfk">0</span></div>
+      <div class="sr"><span class="sl">EVIL TWINS</span><span class="sv r" id="set">0</span></div>
+      <div class="sr"><span class="sl">OPEN NETS</span><span class="sv r" id="sop">0</span></div>
+      <div class="sr"><span class="sl">MAC SPOOFS</span><span class="sv a" id="sms">0</span></div>
+      <div class="sr"><span class="sl">DEAUTH FRAMES</span><span class="sv r" id="sdf">0</span></div>
+      <div class="sr"><span class="sl">ENC DOWNGRADES</span><span class="sv r" id="sed">0</span></div>
+      <div class="sr"><span class="sl">SCAN TIME</span><span class="sv a" id="stm">--</span></div>
+      <div class="sgg" id="sgg"></div>
+    </div>
+    <div class="pn" style="margin-top:10px">
+      <div class="pt">ENCRYPTION DIST.</div>
+      <div class="er"><span class="et">WPA3</span><div class="eb2"><div class="ef w3" id="ew3" style="width:0"></div></div><span class="ec" id="cw3">0</span></div>
+      <div class="er"><span class="et">WPA2</span><div class="eb2"><div class="ef w2" id="ew2" style="width:0"></div></div><span class="ec" id="cw2">0</span></div>
+      <div class="er"><span class="et">OPEN</span><div class="eb2"><div class="ef op" id="eop" style="width:0"></div></div><span class="ec" id="cop">0</span></div>
+    </div>
+    <div class="pn" style="margin-top:10px">
+      <div class="pt">PROTOCOL FLAGS</div>
+      <div class="sr"><span class="sl">EVIL TWIN</span><span class="sv" id="fet">--</span></div>
+      <div class="sr"><span class="sl">ENC DOWNGRADE</span><span class="sv" id="fed">--</span></div>
+      <div class="sr"><span class="sl">MAC SPOOF</span><span class="sv" id="fms2">--</span></div>
+      <div class="sr"><span class="sl">DEAUTH STORM</span><span class="sv" id="fds">--</span></div>
+      <div class="sr"><span class="sl">OPEN HONEYPOT</span><span class="sv" id="foh">--</span></div>
+      <div class="sr"><span class="sl">CH CONFLICT</span><span class="sv" id="fcc">--</span></div>
+      <div class="sr"><span class="sl">RF MISMATCH</span><span class="sv" id="frm">--</span></div>
+    </div>
+  </div>
+
+  <!-- CENTER -->
+  <div class="cp">
+    <div style="display:flex;flex-direction:column;align-items:center">
+      <div class="rw">
+        <div class="ro">
+          <div class="rr"></div><div class="rr"></div><div class="rr"></div>
+          <div class="rch"></div><div class="rcv"></div>
+          <div class="rsp"></div><div class="rsf"></div>
+          <!-- static blips -->
+          <div class="rb g" style="top:35%;left:60%"></div>
+          <div class="rb g" style="top:60%;left:40%"></div>
+          <div class="rb b" style="top:25%;left:35%"></div>
+          <div class="rb b" style="top:70%;left:70%"></div>
+          <div class="rb g" style="top:55%;left:25%"></div>
+          <!-- dynamic rogue blips -->
+          <div class="rb r" id="rb1" style="top:45%;left:72%;display:none"></div>
+          <div class="rb r" id="rb2" style="top:30%;left:55%;display:none"></div>
+          <div class="rb r" id="rb3" style="top:68%;left:30%;display:none"></div>
+        </div>
+        <span class="rlab">◈ ACTIVE SWEEP — 2.4GHz/5GHz ◈</span>
+      </div>
+    </div>
+
+    <div class="sbw">
+      <button class="sb" id="scbtn" onclick="triggerScan()"><span class="si">⌖</span> START SCAN</button>
+      <div class="live-toggle-row">
+        <label class="toggle-wrap"><input type="checkbox" class="toggle-inp" id="live-toggle" onchange="toggleLive(this)"><div class="toggle-slider"></div></label>
+        <span>AUTO REFRESH <span id="live-label" style="color:var(--td)">OFF</span></span>
+        <span style="color:var(--td)">|</span>
+        <span id="refresh-countdown" style="color:var(--td)">--</span>
+      </div>
+      <div class="pw" id="pw">
+        <div class="pl"><span id="pstage">INITIALIZING...</span><span id="ppct">0%</span></div>
+        <div class="pb"><div class="pf" id="pf"></div></div>
+      </div>
+    </div>
+
+    <div class="cnp">
+      <div class="cnh"><div class="cd rd"></div><div class="cd yl"></div><div class="cd gn"></div><span style="margin-left:5px">CYBER_INTEL_CONSOLE · BACKEND: <span id="backend-status">CHECKING...</span></span></div>
+      <div class="cnb" id="clog">
+        <div class="ll"><span class="lt">00:00:00</span><span class="lo">[  OK  ]</span><span class="lm">Fake WiFi Detector 2.0 initialized</span></div>
+        <div class="ll"><span class="lt">00:00:01</span><span class="li">[ INFO ]</span><span class="lm">8 detection engines loaded and ready</span></div>
+        <div class="ll"><span class="lt">00:00:02</span><span class="li">[ INFO ]</span><span class="lm">Checking backend: http://localhost:5000 ...</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div>
+    <div class="pn red-p">
+      <div class="pt r">THREAT ASSESSMENT</div>
+      <div class="tmw">
+        <div class="tml"><span>THREAT LEVEL</span><span class="tmv" id="tpct">0%</span></div>
+        <div class="tbg"><div class="tbf" id="tbf"></div></div>
+      </div>
+      <div style="margin-top:12px">
+        <div class="pt b" style="margin-bottom:6px">CHANNEL ACTIVITY</div>
+        <div class="chm" id="chmap"></div>
+      </div>
+    </div>
+    <div class="pn" style="margin-top:10px">
+      <div class="pt">DATA SOURCE</div>
+      <div class="sr"><span class="sl">BACKEND</span><span class="sv" id="ds-backend">OFFLINE</span></div>
+      <div class="sr"><span class="sl">MODE</span><span class="sv b" id="ds-mode">DEMO</span></div>
+      <div class="sr"><span class="sl">SCANNER</span><span class="sv" id="ds-scanner">--</span></div>
+      <div class="sr"><span class="sl">BASELINE</span><span class="sv b" id="ds-baseline">0 entries</span></div>
+      <div class="sr"><span class="sl">SCANS DONE</span><span class="sv" id="ds-scans">0</span></div>
+    </div>
+    <div class="pn" style="margin-top:10px">
+      <div class="pt">THREAT DISTRIBUTION</div>
+      <div id="threat-dist"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ALERT BANNER -->
+<div class="ab" id="abanner" style="max-width:1600px;margin:0 auto 12px;padding:10px 16px">
+  <span class="abicon">⚠</span>
+  <div><div class="abt" id="atitle">THREAT DETECTED</div><div class="abd" id="adesc">--</div></div>
+</div>
+
+<!-- RESULTS -->
+<div class="res-sec" id="rss">
+  <div class="ticker" id="live-ticker">
+    <span style="color:var(--td);font-family:'Orbitron',monospace;font-size:9px;letter-spacing:2px">LIVE FEED:</span>
+    <span id="ticker-content" style="color:var(--eb)">Awaiting scan data...</span>
+  </div>
+  <div class="col" id="col-all">
+    <div class="ch2" onclick="toggleCol('col-all')">
+      <span class="ctitle">◈ ALL DETECTED NETWORKS <span class="cnb2 g" id="ball">0</span></span>
+      <span class="ca">▾</span>
+    </div>
+    <div class="cb3" id="body-all"></div>
+  </div>
+  <div class="col danger" id="col-fake">
+    <div class="ch2" onclick="toggleCol('col-fake')">
+      <span class="ctitle dt">⚠ ROGUE / FAKE ACCESS POINTS <span class="cnb2 r" id="bfake">0</span></span>
+      <span class="ca" style="color:var(--ra)">▾</span>
+    </div>
+    <div class="cb3" id="body-fake"></div>
+  </div>
+</div>
+</div><!-- end tab-scan -->
+
+<!-- ═══════════ TAB: ENGINE RESULTS ═══════════ -->
+<div class="tc" id="tab-det">
+<div style="padding:14px 20px;max-width:1600px;margin:0 auto">
+  <div class="pn">
+    <div class="pt">8 DETECTION ENGINES — LIVE RESULTS</div>
+    <p style="font-size:10px;color:var(--td);margin-bottom:12px;line-height:1.7">All engines run in parallel on backend (app.py). Results update with each scan. Run a scan first to see live analysis.</p>
+    <div class="det-grid" id="det-grid"></div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════ TAB: NETWORK INTEL ═══════════ -->
+<div class="tc" id="tab-intel">
+<div style="padding:14px 20px;max-width:1600px;margin:0 auto">
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px">
+    <div class="pn">
+      <div class="pt">RISK SCORE FORMULA</div>
+      <div style="font-size:10px;color:var(--td);line-height:1.9">
+        <div style="color:var(--eb);font-size:11px;margin-bottom:8px">RISK = Σ(Weight × Detection)</div>
+        <div class="sr"><span class="sl">SSID/BSSID Mismatch</span><span class="sv b">30 pts</span></div>
+        <div class="sr"><span class="sl">Encryption Downgrade</span><span class="sv b">25 pts</span></div>
+        <div class="sr"><span class="sl">MAC Vendor Mismatch</span><span class="sv b">20 pts</span></div>
+        <div class="sr"><span class="sl">Open Network</span><span class="sv b">20 pts</span></div>
+        <div class="sr"><span class="sl">Beacon Anomaly</span><span class="sv b">15 pts</span></div>
+        <div class="sr"><span class="sl">Deauth Flood</span><span class="sv b">15 pts</span></div>
+        <div class="sr"><span class="sl">RF Fingerprint</span><span class="sv b">15 pts</span></div>
+        <div class="sr"><span class="sl">Signal Anomaly</span><span class="sv b">10 pts</span></div>
+        <div class="sr"><span class="sl">Channel Conflict</span><span class="sv b">10 pts</span></div>
+        <div style="margin-top:10px;padding:7px;background:rgba(0,212,255,.05);border:1px solid var(--beb);border-radius:3px;color:var(--eb);line-height:1.9">
+          0–30: LOW · 31–60: MEDIUM · 61–80: HIGH · 81–100: CRITICAL
+        </div>
+      </div>
+    </div>
+    <div class="pn">
+      <div class="pt">BACKEND SETUP GUIDE</div>
+      <div style="font-size:10px;color:var(--td);line-height:2">
+        <div style="color:var(--ng);margin-bottom:8px">1. INSTALL DEPENDENCIES</div>
+        <div style="background:rgba(0,255,65,.05);border:1px solid var(--bng);padding:8px;border-radius:3px;color:var(--ng);font-size:9px;margin-bottom:10px;word-break:break-all">pip install flask flask-cors pywifi</div>
+        <div style="color:var(--ng);margin-bottom:8px">2. RUN BACKEND</div>
+        <div style="background:rgba(0,255,65,.05);border:1px solid var(--bng);padding:8px;border-radius:3px;color:var(--ng);font-size:9px;margin-bottom:10px">python app.py</div>
+        <div style="color:var(--ng);margin-bottom:8px">3. OPEN THIS HTML</div>
+        <div style="color:var(--td)">Open in browser · Scan auto-detects live vs demo mode · Backend runs on port 5000</div>
+        <div style="margin-top:10px;color:var(--am)">⚠ On Linux: run with sudo for full scan access<br>⚠ Windows: pywifi needs admin + wlan adapter</div>
+      </div>
+    </div>
+    <div class="pn">
+      <div class="pt">API ENDPOINTS</div>
+      <div style="font-size:10px;color:var(--td);line-height:2">
+        <div class="sr"><span class="sl">GET /scan-real</span><span class="sv b">Full scan + detection</span></div>
+        <div class="sr"><span class="sl">GET /engines</span><span class="sv">Engine info</span></div>
+        <div class="sr"><span class="sl">GET /status</span><span class="sv">Backend health</span></div>
+        <div class="sr"><span class="sl">GET /history</span><span class="sv">Scan history</span></div>
+        <div style="margin-top:10px;padding:7px;background:rgba(0,212,255,.04);border:1px solid var(--beb);border-radius:3px;color:var(--eb);font-size:9px">
+          Response format: JSON · CORS enabled · Port: 5000<br>
+          All engines run server-side in Python · Results include risk scores, vendor lookup, threat reasons
+        </div>
+      </div>
+    </div>
+    <div class="pn">
+      <div class="pt">OUI VENDOR SAMPLE</div>
+      <div id="oui-tbl" style="font-size:10px"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- FOOTER -->
+<div class="fhud">
+  <span><div class="hd g" style="display:inline-block;margin-right:6px"></div>FAKE WIFI DETECTOR 2.0 · REAL BACKEND INTEGRATION</span>
+  <span id="backend-url" style="color:var(--eb)">http://localhost:5000</span>
+  <span>SESSION: <span style="color:var(--ng)" id="sid">--</span></span>
+</div>
+</div><!-- end .aw -->
+
+<!-- MODAL -->
+<div class="mbg" id="mbg" onclick="closeModal(event)">
+  <div class="modal" id="mbody"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// CANVAS — Matrix + Hex
+// ═══════════════════════════════════════════
+const mc=document.getElementById('mc'),mx=mc.getContext('2d');
+const hc=document.getElementById('hc'),hx=hc.getContext('2d');
+function rsz(){mc.width=hc.width=innerWidth;mc.height=hc.height=innerHeight}
+rsz();window.addEventListener('resize',rsz);
+const chars='0123456789ABCDEF<>[]{}アイウエオカ';
+let drops=[];
+function initDrops(){drops=Array(Math.floor(innerWidth/15)).fill(1)}
+initDrops();
+setInterval(()=>{mx.fillStyle='rgba(2,13,10,.05)';mx.fillRect(0,0,mc.width,mc.height);mx.font='11px Share Tech Mono';drops.forEach((y,i)=>{mx.fillStyle=Math.random()>.98?'#fff':(Math.random()>.9?'#00d4ff':'#00ff41');mx.fillText(chars[Math.floor(Math.random()*chars.length)],i*15,y*15);if(y*15>mc.height&&Math.random()>.975)drops[i]=0;drops[i]++})},55);
+const hexPs=Array.from({length:25},()=>({x:Math.random()*2000,y:Math.random()*2000,s:4+Math.random()*10,o:.04+Math.random()*.16,sp:.2+Math.random()*.4,c:Math.random()>.5?'#00ff41':'#00d4ff'}));
+function dHex(x,y,r,c,o){hx.beginPath();for(let i=0;i<6;i++){const a=Math.PI/3*i-Math.PI/6;i===0?hx.moveTo(x+r*Math.cos(a),y+r*Math.sin(a)):hx.lineTo(x+r*Math.cos(a),y+r*Math.sin(a))}hx.closePath();hx.strokeStyle=c;hx.globalAlpha=o;hx.lineWidth=.6;hx.stroke();hx.globalAlpha=1}
+(function ah(){hx.clearRect(0,0,hc.width,hc.height);hexPs.forEach(p=>{p.y-=p.sp;if(p.y+p.s<0){p.y=hc.height+p.s;p.x=Math.random()*hc.width}dHex(p.x,p.y,p.s,p.c,p.o)});requestAnimationFrame(ah)})();
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+document.getElementById('sid').textContent=Math.random().toString(36).substr(2,8).toUpperCase();
+setInterval(()=>{const n=new Date();document.getElementById('lclock').textContent=`${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}:${String(n.getSeconds()).padStart(2,'0')}`},1000);
+
+// Signal graph
+const sgg=document.getElementById('sgg');
+for(let i=0;i<20;i++){const b=document.createElement('div');b.className='sgb';b.style.cssText=`height:${20+Math.random()*80}%;animation-delay:${Math.random()*2}s;animation-duration:${.5+Math.random()}s`;sgg.appendChild(b)}
+
+// Channel map
+const chmap=document.getElementById('chmap');
+[1,3,6,7,11,12,13].forEach(ch=>{
+  const w=document.createElement('div');w.className='cbw';
+  w.innerHTML=`<div class="cbb"><div class="cb2" id="ch${ch}" style="height:0"></div></div><div class="cbl">CH${ch}</div>`;
+  chmap.appendChild(w);
+  setTimeout(()=>{document.getElementById('ch'+ch).style.height=(8+Math.random()*85)+'%'},2200);
+});
+
+// OUI table
+const OUI_SAMPLE={'A4:C3:F0':'Intel Corp','B8:27:EB':'Raspberry Pi Fdn','C0:FF:EE':'Cisco Systems','D8:47:32':'TP-Link Tech','E8:94:F6':'ASUS TeK','78:12:B8':'Huawei Tech','94:A6:7E':'Samsung Electronics','44:D9:E7':'Netgear Inc','3C:37:86':'Apple Inc','00:11:22':'UNKNOWN/GENERIC'};
+const ouitbl=document.getElementById('oui-tbl');
+Object.entries(OUI_SAMPLE).forEach(([k,v])=>{ouitbl.innerHTML+=`<div class="sr"><span class="sl">${k}:xx</span><span class="sv b" style="font-size:9px">${v}</span></div>`});
+
+// Det grid init
+const ENGINES=[
+  {id:'e1',name:'SSID/BSSID CORRELATION',icon:'◈',desc:'Evil Twin detection via BSSID mapping'},
+  {id:'e2',name:'BEACON FRAME ANALYSIS',icon:'◉',desc:'Beacon interval & capability IE anomaly check'},
+  {id:'e3',name:'ENCRYPTION DOWNGRADE',icon:'⬇',desc:'WPA3→WPA2 / any→OPEN transition detection'},
+  {id:'e4',name:'MAC VENDOR FINGERPRINT',icon:'◆',desc:'OUI lookup + locally-administered MAC detection'},
+  {id:'e5',name:'SIGNAL ANOMALY',icon:'▲',desc:'RSSI baseline comparison & proximity detection'},
+  {id:'e6',name:'DEAUTH MONITOR',icon:'⚡',desc:'802.11 deauth frame flood detection'},
+  {id:'e7',name:'CHANNEL CONFLICT',icon:'◐',desc:'Multi-channel SSID broadcast detection'},
+  {id:'e8',name:'RF FINGERPRINTING',icon:'∿',desc:'Hardware clock skew & carrier offset analysis'},
+];
+function initDetGrid(){
+  const g=document.getElementById('det-grid');g.innerHTML='';
+  ENGINES.forEach(e=>{
+    g.innerHTML+=`<div class="dcard" id="dc-${e.id}">
+      <div class="dct"><span>${e.icon} ${e.name}</span><span class="dcs idle" id="ds-${e.id}">IDLE</span></div>
+      <div class="ddesc">${e.desc}</div>
+      <div class="dbar-bg"><div class="dbar" id="db-${e.id}"></div></div>
+      <div class="dfind" id="df-${e.id}">Awaiting scan...</div>
+    </div>`;
+  });
+}
+initDetGrid();
+
+// Typing subtitle
+const smsg=['Checking backend connection...','Real-time network reconnaissance active','8 detection engines standing by','SSID/BSSID correlation matrix loaded','Deauth frame monitor: LISTENING','Auto-refresh ready — toggle ON to activate'];
+let smi=0,sci=0,sty=true;
+function typeIt(){const el=document.getElementById('stext'),m=smsg[smi];
+  if(sty){el.textContent=m.slice(0,sci+1);sci++;if(sci>=m.length){sty=false;setTimeout(typeIt,2000);return}}
+  else{el.textContent=m.slice(0,sci-1);sci--;if(sci<=0){sty=true;smi=(smi+1)%smsg.length;sci=0}}
+  setTimeout(typeIt,sty?52:20)}
+typeIt();
+
+// ═══════════════════════════════════════════
+// CONSOLE LOG
+// ═══════════════════════════════════════════
+function addLog(type,msg,delay=0){
+  setTimeout(()=>{
+    const b=document.getElementById('clog');
+    const n=new Date();
+    const t=`${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}:${String(n.getSeconds()).padStart(2,'0')}`;
+    const tm={INFO:'li',OK:'lo',WARN:'lw',ALERT:'la2'};
+    const tl={INFO:'[ INFO ]',OK:'[  OK  ]',WARN:'[ WARN ]',ALERT:'[ALERT!]'};
+    b.innerHTML+=`<div class="ll"><span class="lt">${t}</span><span class="${tm[type]}">${tl[type]}</span><span class="lm">${msg}</span></div>`;
+    b.scrollTop=b.scrollHeight;
+  },delay);
+}
+
+// ═══════════════════════════════════════════
+// BACKEND HEALTH CHECK
+// ═══════════════════════════════════════════
+const BACKEND='http://localhost:5000';
+let backendOnline=false;
+
+async function checkBackend(){
+  try{
+    const r=await fetch(`${BACKEND}/status`,{signal:AbortSignal.timeout(2500)});
+    const d=await r.json();
+    backendOnline=true;
+    document.getElementById('conn-badge').className='conn-badge live';
+    document.getElementById('conn-badge').textContent='◉ LIVE MODE';
+    document.getElementById('backend-status').textContent='ONLINE';
+    document.getElementById('backend-status').style.color='var(--ng)';
+    document.getElementById('ds-backend').textContent='ONLINE';
+    document.getElementById('ds-backend').className='sv';
+    document.getElementById('ds-mode').textContent='REAL SCANNER';
+    document.getElementById('ds-scanner').textContent=d.scanner||'AUTO';
+    document.getElementById('ds-baseline').textContent=d.baseline_entries+' entries';
+    document.getElementById('ds-scans').textContent=d.scan_count;
+    addLog('OK',`Backend online · OS: ${d.scanner} · Engines: ${d.engines_loaded}`);
+    return true;
+  }catch{
+    backendOnline=false;
+    document.getElementById('conn-badge').className='conn-badge demo';
+    document.getElementById('conn-badge').textContent='◉ DEMO MODE';
+    document.getElementById('backend-status').textContent='OFFLINE';
+    document.getElementById('backend-status').style.color='var(--ra)';
+    document.getElementById('ds-backend').textContent='OFFLINE';
+    document.getElementById('ds-backend').className='sv r';
+    document.getElementById('ds-mode').textContent='DEMO DATA';
+    addLog('WARN','Backend offline — using demo data · Start app.py to enable live scanning');
+    return false;
+  }
+}
+checkBackend();
+
+// ═══════════════════════════════════════════
+// FETCH FROM BACKEND OR USE DEMO
+// ═══════════════════════════════════════════
+async function fetchScanData(){
+  if(backendOnline){
+    try{
+      const r=await fetch(`${BACKEND}/scan-real`,{signal:AbortSignal.timeout(15000)});
+      const d=await r.json();
+      addLog('OK',`Backend scan complete · ${d.summary?.total_networks||0} networks · ${d.summary?.rogue_count||0} rogue`);
+      // Update baseline count
+      const st=await fetch(`${BACKEND}/status`);
+      const sd=await st.json();
+      document.getElementById('ds-baseline').textContent=sd.baseline_entries+' entries';
+      document.getElementById('ds-scans').textContent=sd.scan_count;
+      return d;
+    }catch(e){
+      addLog('WARN',`Backend fetch error: ${e.message} — falling back to demo`);
+      backendOnline=false;
+      document.getElementById('conn-badge').className='conn-badge demo';
+      document.getElementById('conn-badge').textContent='◉ DEMO MODE';
+    }
+  }
+  // Demo data fallback
+  return buildDemoResult();
+}
+
+// ═══════════════════════════════════════════
+// DEMO DATA + CLIENT-SIDE DETECTION
+// ═══════════════════════════════════════════
+const OUI_DB={'A4:C3:F0':'Intel Corp','B8:27:EB':'Raspberry Pi Foundation','DC:A6:32':'Raspberry Pi Foundation','C0:FF:EE':'Cisco Systems','D8:47:32':'TP-Link Technologies','E8:94:F6':'ASUS TeK','78:12:B8':'Huawei Technologies','94:A6:7E':'Samsung Electronics','44:D9:E7':'Netgear Inc','3C:37:86':'Apple Inc','00:11:22':'UNKNOWN/GENERIC','FF:AA:BB':'UNKNOWN/GENERIC','00:DE:AD':'PROBE/VIRTUAL AP','AC:84:C6':'Aruba Networks'};
+
+function getVendor(bssid){return OUI_DB[bssid.toUpperCase().split(':').slice(0,3).join(':')]||'Unknown Vendor'}
+function isLocallyAdmin(bssid){try{return !!(parseInt(bssid.split(':')[0],16)&0x02)}catch{return false}}
+
+function clientSideDetection(nets){
+  const threats=[];
+  // Engine 1
+  const sm={};nets.forEach(n=>{if(!sm[n.ssid])sm[n.ssid]=[];sm[n.ssid].push(n.bssid)});
+  Object.entries(sm).filter(([s,bs])=>bs.length>1).forEach(([s,bs])=>threats.push({engine:1,severity:'CRITICAL',detail:`EVIL TWIN: '${s}' on ${bs.length} BSSIDs`,ssids:[s],score:30}));
+  // Engine 2
+  nets.filter(n=>Math.abs((n.beacon_interval||100)-100)>15).forEach(n=>threats.push({engine:2,severity:'WARNING',detail:`Beacon anomaly '${n.ssid}': ${n.beacon_interval}ms`,ssids:[n.ssid],score:15}));
+  // Engine 3
+  const ENC={WPA3:3,WPA2:2,WEP:1,OPEN:0};
+  nets.filter(n=>n.encryption==='OPEN').forEach(n=>threats.push({engine:3,severity:'HIGH',detail:`Open network '${n.ssid}' — possible honeypot`,ssids:[n.ssid],score:20}));
+  // Engine 4
+  nets.forEach(n=>{const v=getVendor(n.bssid);n.vendor=v;if(['Unknown Vendor','UNKNOWN/GENERIC','PROBE/VIRTUAL AP'].includes(v))threats.push({engine:4,severity:'WARNING',detail:`Unknown OUI '${n.ssid}': ${n.bssid.slice(0,8)}`,ssids:[n.ssid],score:15});if(isLocallyAdmin(n.bssid))threats.push({engine:4,severity:'HIGH',detail:`Local MAC '${n.ssid}': ${n.bssid} — possible spoof`,ssids:[n.ssid],score:20})});
+  // Engine 5
+  nets.filter(n=>n.signal>-50&&n.encryption==='OPEN').forEach(n=>threats.push({engine:5,severity:'HIGH',detail:`RSSI anomaly '${n.ssid}': ${n.signal}dBm strong+open`,ssids:[n.ssid],score:10}));
+  // Engine 6
+  nets.filter(n=>(n.deauth_frames||0)>10).forEach(n=>threats.push({engine:6,severity:'CRITICAL',detail:`Deauth storm from '${n.ssid}': ${n.deauth_frames} frames`,ssids:[n.ssid],score:15}));
+  // Engine 7
+  const cm={};nets.forEach(n=>{if(!cm[n.ssid])cm[n.ssid]=new Set();cm[n.ssid].add(n.channel)});
+  Object.entries(cm).filter(([s,chs])=>chs.size>1).forEach(([s,chs])=>threats.push({engine:7,severity:'HIGH',detail:`Channel conflict '${s}' on CH${[...chs].join(',')}`,ssids:[s],score:10}));
+  // Engine 8
+  nets.filter(n=>(n.clock_skew||0)>0.8).forEach(n=>threats.push({engine:8,severity:'HIGH',detail:`RF mismatch '${n.ssid}': δclk=${n.clock_skew}ms`,ssids:[n.ssid],score:15}));
+
+  // Score each network
+  nets.forEach(n=>{
+    let sc=0,reasons=[];
+    threats.filter(t=>t.ssids.includes(n.ssid)).forEach(t=>{sc+=t.score;reasons.push(t.detail)});
+    n.risk_score=Math.min(100,sc);
+    n.is_rogue=n.risk_score>=61;
+    n.risk_level=n.risk_score>=81?'CRITICAL':n.risk_score>=61?'HIGH':n.risk_score>=31?'MEDIUM':'LOW';
+    n.threat_reasons=reasons;
+  });
+  return{networks:nets,engine_results:buildEngineResults(threats),all_threats:threats,summary:{total_networks:nets.length,rogue_count:nets.filter(n=>n.is_rogue).length,evil_twins:threats.filter(t=>t.engine===1).length,open_networks:nets.filter(n=>n.encryption==='OPEN').length,threat_level:nets.some(n=>n.is_rogue)?'CRITICAL':'LOW'}};
+}
+
+function buildEngineResults(threats){
+  const r={};
+  for(let i=1;i<=8;i++){const t=threats.filter(x=>x.engine===i);r[`engine_${i}`]={threats_found:t.length,threats:t}}
+  return r;
+}
+
+function buildDemoResult(){
+  const base=[
+    {ssid:'HomeNet-5G',bssid:'A4:C3:F0:12:88:CD',encryption:'WPA3',signal:-45,channel:6,band:'5GHz',beacon_interval:100,deauth_frames:0,clock_skew:.12},
+    {ssid:'AndroidAP_7B2',bssid:'B8:27:EB:AA:12:FF',encryption:'WPA2',signal:-62,channel:1,band:'2.4GHz',beacon_interval:100,deauth_frames:0,clock_skew:.25},
+    {ssid:'NETGEAR_7FE2',bssid:'C0:FF:EE:11:22:33',encryption:'WPA2',signal:-71,channel:11,band:'2.4GHz',beacon_interval:100,deauth_frames:0,clock_skew:.18},
+    {ssid:'FREE_PUBLIC_WIFI',bssid:'00:11:22:33:44:55',encryption:'OPEN',signal:-42,channel:6,band:'2.4GHz',beacon_interval:60,deauth_frames:23,clock_skew:1.85},
+    {ssid:'Jio_FiberNet',bssid:'D8:47:32:AA:BB:CC',encryption:'WPA3',signal:-58,channel:36,band:'5GHz',beacon_interval:100,deauth_frames:0,clock_skew:.09},
+    {ssid:'TP-LINK_Home_2',bssid:'E8:94:F6:DE:AD:01',encryption:'WPA2',signal:-67,channel:13,band:'2.4GHz',beacon_interval:100,deauth_frames:0,clock_skew:.22},
+    {ssid:'HomeNet-5G',bssid:'FF:AA:BB:00:11:22',encryption:'WPA2',signal:-38,channel:6,band:'5GHz',beacon_interval:85,deauth_frames:0,clock_skew:2.30},
+    {ssid:'CafeConnect',bssid:'78:12:B8:22:33:44',encryption:'WPA2',signal:-73,channel:11,band:'2.4GHz',beacon_interval:100,deauth_frames:0,clock_skew:.15},
+    {ssid:'AIRTEL_5G_Plus',bssid:'94:A6:7E:CC:DD:EE',encryption:'WPA3',signal:-54,channel:100,band:'5GHz',beacon_interval:100,deauth_frames:0,clock_skew:.08},
+    {ssid:'Marriott_Guest',bssid:'00:DE:AD:BE:EF:01',encryption:'OPEN',signal:-55,channel:1,band:'2.4GHz',beacon_interval:75,deauth_frames:8,clock_skew:1.20},
+    {ssid:'BSNL_Broadband',bssid:'44:D9:E7:89:AB:CD',encryption:'WPA2',signal:-80,channel:3,band:'2.4GHz',beacon_interval:100,deauth_frames:0,clock_skew:.31},
+    {ssid:'Office_Secure',bssid:'3C:37:86:FF:00:12',encryption:'WPA3',signal:-50,channel:44,band:'5GHz',beacon_interval:100,deauth_frames:0,clock_skew:.11},
+  ];
+  base.forEach(n=>{n.signal+=Math.floor(Math.random()*6-3);n.signal_percent=Math.max(0,Math.min(100,2*(n.signal+100)));n.deauth_frames+=Math.floor(Math.random()*3)});
+  return clientSideDetection(base);
+}
+
+// ═══════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════
+function setFlag(id,txt,type){const el=document.getElementById(id);if(!el)return;el.textContent=txt;el.className='sv'+(type==='r'?' r':type==='a'?' a':type==='b'?' b':'')}
+function rClass(r){return r>70?'hi':r>40?'me':'lo'}
+function sigGrad(s){if(s>-60)return'linear-gradient(90deg,var(--ng),#00ff88)';if(s>-75)return'linear-gradient(90deg,var(--am),#ffcc00)';return'linear-gradient(90deg,var(--ra),#ff6666)'}
+function sigPct(s){return Math.max(5,Math.min(100,(s+100)*2))}
+function encCls(e){return e==='WPA3'?'w3':e==='WPA2'?'w2':e==='WEP'?'wep':'op'}
+
+function buildCard(net,delay){
+  const card=document.createElement('div');
+  card.className='nc'+(net.is_rogue?' fake':'');
+  card.style.animationDelay=delay+'ms';
+  const rc=rClass(net.risk_score||0);
+  const sg=sigGrad(net.signal);
+  const sp=sigPct(net.signal)+'%';
+  const ec=encCls(net.encryption);
+  const sigTxt=net.signal>-60?'STRONG':net.signal>-75?'MEDIUM':'WEAK';
+  const vendor=net.vendor||getVendor(net.bssid);
+
+  card.innerHTML=`
+    <div class="ncc"></div>
+    ${net.is_rogue?'<span class="ftag">⚠ ROGUE</span>':''}
+    <div class="ssid"><span class="wi">📶</span>${net.ssid||'HIDDEN'}</div>
+    <div class="br">
+      <span class="eb3 ${ec}">${net.encryption}</span>
+      <span class="eb3" style="border:1px solid rgba(157,0,255,.38);color:#cc66ff;background:rgba(157,0,255,.06)">${net.band||'2.4GHz'}</span>
+      <span class="eb3" style="border:1px solid rgba(0,255,65,.18);color:var(--td)">CH${net.channel}</span>
+      ${net.is_rogue?'<span class="eb3 op">ROGUE</span>':''}
+    </div>
+    <div class="cm2">
+      <div class="mi">BSSID: <span>${net.bssid}</span></div>
+      <div class="mi">BEACON: <span style="${net.beacon_interval!==100?'color:var(--am)':''}">${net.beacon_interval||100}ms</span></div>
+      <div class="mi">VENDOR: <span style="${['Unknown Vendor','UNKNOWN/GENERIC'].includes(vendor)?'color:var(--ra)':''}" title="${vendor}">${vendor.length>18?vendor.substr(0,17)+'…':vendor}</span></div>
+      <div class="mi">RISK: <span class="${rc==='hi'?'sv r':rc==='me'?'sv a':'sv'}">${net.risk_score||0}/100</span></div>
+    </div>
+    <div class="sirow">
+      <div class="sil"><span>SIGNAL</span><span>${net.signal}dBm — ${sigTxt}</span></div>
+      <div class="sib"><div class="sif" data-w="${sp}" style="background:${sg};width:0"></div></div>
+    </div>
+    <div class="rrow">
+      <span class="rl2">RISK</span>
+      <div class="rm"><div class="rf ${rc}" data-w="${net.risk_score||0}%" style="width:0"></div></div>
+      <span class="rscore ${rc}">${net.risk_score||0}</span>
+    </div>
+    ${net.threat_reasons&&net.threat_reasons.length?`<div class="det-reasons">${net.threat_reasons.slice(0,3).map(r=>`<div class="dr">${r}</div>`).join('')}</div>`:''}
+  `;
+  card.addEventListener('click',()=>showModal(net));
+  setTimeout(()=>{card.querySelectorAll('[data-w]').forEach(el=>{setTimeout(()=>{el.style.width=el.getAttribute('data-w')},200)})},delay+300);
+  return card;
+}
+
+// ═══════════════════════════════════════════
+// UPDATE DETECTION ENGINE UI FROM RESULTS
+// ═══════════════════════════════════════════
+function updateEngineUI(engine_results){
+  const map=[
+    {id:'e1',key:'engine_1',barC:'r',okMsg:'No Evil Twins detected',failPfx:'EVIL TWIN detected'},
+    {id:'e2',key:'engine_2',barC:'b',okMsg:'Beacon intervals nominal',failPfx:'Beacon anomaly'},
+    {id:'e3',key:'engine_3',barC:'r',okMsg:'No encryption downgrades',failPfx:'Downgrade detected'},
+    {id:'e4',key:'engine_4',barC:'a',okMsg:'All MAC vendors verified',failPfx:'MAC mismatch'},
+    {id:'e5',key:'engine_5',barC:'a',okMsg:'Signal levels normal',failPfx:'RSSI anomaly'},
+    {id:'e6',key:'engine_6',barC:'r',okMsg:'No deauth floods detected',failPfx:'DEAUTH STORM'},
+    {id:'e7',key:'engine_7',barC:'b',okMsg:'No channel conflicts',failPfx:'Channel conflict'},
+    {id:'e8',key:'engine_8',barC:'b',okMsg:'RF fingerprints match',failPfx:'RF mismatch'},
+  ];
+  map.forEach((m,i)=>{
+    setTimeout(()=>{
+      const er=engine_results[m.key]||{threats_found:0,threats:[]};
+      const card=document.getElementById('dc-'+m.id);
+      const ds=document.getElementById('ds-'+m.id);
+      const db=document.getElementById('db-'+m.id);
+      const df=document.getElementById('df-'+m.id);
+      const hasThreats=er.threats_found>0;
+      const isCrit=er.threats.some(t=>t.severity==='CRITICAL');
+      card.className='dcard '+(isCrit?'threat':hasThreats?'warn':'clear');
+      ds.className='dcs '+(isCrit?'alert':hasThreats?'warn':'ok');
+      ds.textContent=isCrit?'THREAT':hasThreats?'ANOMALY':'CLEAR';
+      db.className='dbar '+m.barC;
+      setTimeout(()=>{db.style.width=(hasThreats?Math.min(100,er.threats_found*30+50):8)+'%'},100);
+      df.className='dfind '+(isCrit?'alert-t':hasThreats?'warn-t':'ok-t');
+      df.textContent=hasThreats?(er.threats[0]?.detail||m.failPfx):m.okMsg;
+    },600+i*180);
+  });
+}
+
+// ═══════════════════════════════════════════
+// RENDER RESULTS
+// ═══════════════════════════════════════════
+function renderResults(data){
+  const allC=document.getElementById('body-all');
+  const fkC=document.getElementById('body-fake');
+  allC.innerHTML='';fkC.innerHTML='';
+
+  const nets=data.networks||[];
+  const sum=data.summary||{};
+
+  nets.forEach((n,i)=>{allC.appendChild(buildCard(n,i*60))});
+  nets.filter(n=>n.is_rogue).forEach((n,i)=>{fkC.appendChild(buildCard(n,i*60))});
+
+  const rogue=nets.filter(n=>n.is_rogue).length;
+  const et=sum.evil_twins||0;
+  const open=sum.open_networks||0;
+  const deauthNets=nets.filter(n=>(n.deauth_frames||0)>10);
+  const enc_down=nets.filter(n=>n.threat_reasons&&n.threat_reasons.some(r=>r.toLowerCase().includes('downgrade'))).length;
+
+  // Stats
+  document.getElementById('sf').textContent=nets.length;
+  document.getElementById('sfk').textContent=rogue;
+  document.getElementById('set').textContent=et;
+  document.getElementById('sop').textContent=open;
+  document.getElementById('sms').textContent=nets.filter(n=>n.threat_reasons&&n.threat_reasons.some(r=>r.toLowerCase().includes('local mac')||r.toLowerCase().includes('spoof'))).length;
+  document.getElementById('sdf').textContent=nets.reduce((a,n)=>a+(n.deauth_frames||0),0);
+  document.getElementById('sed').textContent=enc_down;
+  document.getElementById('stm').textContent=(3+Math.random()*3).toFixed(1)+'s';
+  document.getElementById('ball').textContent=nets.length;
+  document.getElementById('bfake').textContent=rogue;
+
+  // Enc dist
+  const n=nets.length||1;
+  const w3=nets.filter(x=>x.encryption==='WPA3').length;
+  const w2=nets.filter(x=>x.encryption==='WPA2').length;
+  const op=nets.filter(x=>x.encryption==='OPEN').length;
+  setTimeout(()=>{
+    document.getElementById('ew3').style.width=(w3/n*100)+'%';
+    document.getElementById('ew2').style.width=(w2/n*100)+'%';
+    document.getElementById('eop').style.width=(op/n*100)+'%';
+    document.getElementById('cw3').textContent=w3;
+    document.getElementById('cw2').textContent=w2;
+    document.getElementById('cop').textContent=op;
+  },500);
+
+  // Threat score
+  const thr=Math.min(100,Math.round(rogue/Math.max(1,nets.length)*60+et*15+open*10));
+  setTimeout(()=>{document.getElementById('tbf').style.width=thr+'%';document.getElementById('tpct').textContent=thr+'%'},600);
+
+  // Threat level
+  const tlt=document.getElementById('tlt');
+  if(rogue>0){tlt.textContent='CRITICAL';tlt.style.color='var(--ra)'}
+  else{tlt.textContent='CLEAR';tlt.style.color='var(--ng)'}
+
+  // Flags
+  setTimeout(()=>{
+    if(et>0)setFlag('fet','DETECTED','r');else setFlag('fet','NONE','');
+    if(enc_down>0)setFlag('fed','CONFIRMED','r');else setFlag('fed','NONE','');
+    const ms=nets.filter(n=>n.threat_reasons&&n.threat_reasons.some(r=>r.toLowerCase().includes('local mac'))).length;
+    if(ms>0)setFlag('fms2','DETECTED','a');else setFlag('fms2','NONE','');
+    if(deauthNets.length>0)setFlag('fds','ACTIVE','r');else setFlag('fds','NONE','');
+    if(open>0)setFlag('foh','DETECTED','r');else setFlag('foh','NONE','');
+    const cc=nets.filter(n=>n.threat_reasons&&n.threat_reasons.some(r=>r.toLowerCase().includes('channel'))).length;
+    if(cc>0)setFlag('fcc','ACTIVE','a');else setFlag('fcc','NONE','');
+    const rf=nets.filter(n=>n.threat_reasons&&n.threat_reasons.some(r=>r.toLowerCase().includes('rf'))).length;
+    if(rf>0)setFlag('frm','DETECTED','a');else setFlag('frm','NONE','');
+  },800);
+
+  // Radar blips
+  if(rogue>0)['rb1','rb2','rb3'].slice(0,rogue).forEach(id=>document.getElementById(id).style.display='block');
+
+  // Channel update
+  const activeChs=nets.filter(n=>n.is_rogue).map(n=>n.channel);
+  activeChs.forEach(ch=>{const el=document.getElementById('ch'+ch);if(el){el.classList.add('act');el.style.height=(60+Math.random()*35)+'%'}});
+
+  // Alert banner
+  if(rogue>0){
+    document.getElementById('abanner').classList.add('v');
+    document.getElementById('atitle').textContent=`⚡ ${rogue} ROGUE ACCESS POINT(S) DETECTED`;
+    document.getElementById('adesc').textContent=`Evil Twin: ${et} · Open Honeypot: ${open} · Downgrade: ${enc_down} · Deauth: ${deauthNets.length} · Click any red card for full analysis`;
+  }else{
+    document.getElementById('abanner').classList.remove('v');
+  }
+
+  // Threat dist
+  const td=document.getElementById('threat-dist');
+  td.innerHTML=`
+    <div class="sr"><span class="sl">CRITICAL</span><span class="sv r">${nets.filter(n=>n.risk_level==='CRITICAL').length}</span></div>
+    <div class="sr"><span class="sl">HIGH</span><span class="sv a">${nets.filter(n=>n.risk_level==='HIGH').length}</span></div>
+    <div class="sr"><span class="sl">MEDIUM</span><span class="sv b">${nets.filter(n=>n.risk_level==='MEDIUM').length}</span></div>
+    <div class="sr"><span class="sl">LOW</span><span class="sv">${nets.filter(n=>n.risk_level==='LOW').length}</span></div>
+  `;
+
+  // Ticker
+  document.getElementById('ticker-content').textContent=
+    `${nets.length} NETWORKS · ${rogue} ROGUE · ${et} EVIL TWIN(S) · ${open} OPEN · THREAT: ${sum.threat_level||'LOW'}`;
+
+  // Engine UI
+  updateEngineUI(data.engine_results||{});
+
+  document.getElementById('rss').classList.add('v');
+  const now=new Date();
+  document.getElementById('last-upd').textContent=`LAST SCAN: ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+}
+
+// ═══════════════════════════════════════════
+// MAIN SCAN ORCHESTRATOR
+// ═══════════════════════════════════════════
+let scanning=false;
+const STAGES=['CHECKING BACKEND...','INITIALIZING ENGINES...','SCANNING CHANNELS...','RUNNING DETECTION ALGORITHMS...','COMPUTING RISK SCORES...','FINALIZING REPORT...'];
+
+async function triggerScan(){
+  if(scanning)return;
+  scanning=true;
+  const btn=document.getElementById('scbtn');
+  btn.className='sb scanning';btn.innerHTML='<span class="si">⌖</span> SCANNING...';btn.disabled=true;
+  document.getElementById('pw').classList.add('v');
+  document.getElementById('abanner').classList.remove('v');
+  ['rb1','rb2','rb3'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('tlt').textContent='SCANNING';document.getElementById('tlt').style.color='var(--eb)';
+  initDetGrid();
+  ENGINES.forEach((e,i)=>{setTimeout(()=>{document.getElementById('ds-'+e.id).className='dcs run';document.getElementById('ds-'+e.id).textContent='RUNNING';document.getElementById('dc-'+e.id).className='dcard run'},200+i*100)});
+
+  // Animated logs
+  const isLive=backendOnline;
+  addLog('INFO',isLive?'Fetching real WiFi data from backend...':'Backend offline — running demo simulation',100);
+  addLog('INFO','Starting 8-engine parallel detection suite',400);
+  ENGINES.forEach((e,i)=>addLog('INFO',`ENGINE-${i+1}: ${e.name} → ACTIVE`,500+i*150));
+
+  // Progress animation
+  let pct=0,si=0;
+  const pint=setInterval(()=>{
+    pct=Math.min(95,pct+(0.8+Math.random()*1.5));
+    document.getElementById('pf').style.width=pct+'%';
+    document.getElementById('ppct').textContent=Math.floor(pct)+'%';
+    const ni=Math.min(5,Math.floor(pct/18));
+    if(ni!==si){si=ni;document.getElementById('pstage').textContent=STAGES[si]}
+  },80);
+
+  // Re-check backend
+  await checkBackend();
+  // Fetch data
+  const data=await fetchScanData();
+
+  clearInterval(pint);
+  document.getElementById('pf').style.width='100%';
+  document.getElementById('ppct').textContent='100%';
+  document.getElementById('pstage').textContent='SCAN COMPLETE';
+
+  // Log threats
+  const threats=data.all_threats||[];
+  const crits=threats.filter(t=>t.severity==='CRITICAL');
+  crits.forEach(t=>addLog('ALERT',t.detail,100));
+  threats.filter(t=>t.severity==='WARNING').slice(0,3).forEach(t=>addLog('WARN',t.detail,200));
+  addLog('OK',`Scan complete · ${data.summary?.total_networks||0} networks · ${data.summary?.rogue_count||0} rogue APs detected`,300);
+
+  renderResults(data);
+
+  btn.className='sb';btn.innerHTML='<span class="si">⌖</span> RE-SCAN';btn.disabled=false;
+  scanning=false;
+}
+
+// ═══════════════════════════════════════════
+// AUTO REFRESH
+// ═══════════════════════════════════════════
+let liveTimer=null,countdown=5;
+function toggleLive(el){
+  if(el.checked){
+    document.getElementById('live-label').textContent='ON';
+    document.getElementById('live-label').style.color='var(--am)';
+    document.getElementById('scbtn').className='sb live-mode';
+    document.getElementById('scbtn').innerHTML='<span class="si">⌖</span> LIVE MODE';
+    countdown=5;
+    liveTimer=setInterval(async()=>{
+      countdown--;
+      document.getElementById('refresh-countdown').textContent=`NEXT SCAN: ${countdown}s`;
+      document.getElementById('refresh-countdown').style.color='var(--am)';
+      if(countdown<=0){countdown=5;if(!scanning)triggerScan()}
+    },1000);
+  }else{
+    clearInterval(liveTimer);liveTimer=null;
+    document.getElementById('live-label').textContent='OFF';
+    document.getElementById('live-label').style.color='var(--td)';
+    document.getElementById('refresh-countdown').textContent='--';
+    document.getElementById('refresh-countdown').style.color='var(--td)';
+    if(!scanning){document.getElementById('scbtn').className='sb';document.getElementById('scbtn').innerHTML='<span class="si">⌖</span> RE-SCAN'}
+  }
+}
+
+// ═══════════════════════════════════════════
+// MODAL
+// ═══════════════════════════════════════════
+function showModal(net){
+  const mb=document.getElementById('mbg'),mc=document.getElementById('mbody');
+  mc.className='modal'+(net.is_rogue?' fake-m':'');
+  const rc=rClass(net.risk_score||0);
+  const vendor=net.vendor||getVendor(net.bssid);
+  mc.innerHTML=`
+    <button class="mclose" onclick="document.getElementById('mbg').classList.remove('v')">✕ CLOSE</button>
+    <div class="mtitle">${net.is_rogue?'⚠ ':''}${net.ssid||'HIDDEN'}</div>
+    <div class="msec">
+      <div class="mstitle">IDENTIFICATION</div>
+      <div class="mr"><span class="mk">SSID</span><span class="mv">${net.ssid}</span></div>
+      <div class="mr"><span class="mk">BSSID</span><span class="mv">${net.bssid}</span></div>
+      <div class="mr"><span class="mk">OUI Vendor</span><span class="mv ${['Unknown Vendor','UNKNOWN/GENERIC'].includes(vendor)?'red':''}">${vendor}</span></div>
+      <div class="mr"><span class="mk">Encryption</span><span class="mv ${net.encryption==='OPEN'?'red':net.encryption==='WPA3'?'':'blue'}">${net.encryption}</span></div>
+      <div class="mr"><span class="mk">Band</span><span class="mv blue">${net.band}</span></div>
+      <div class="mr"><span class="mk">Channel</span><span class="mv">${net.channel}</span></div>
+      <div class="mr"><span class="mk">RSSI</span><span class="mv">${net.signal} dBm</span></div>
+      <div class="mr"><span class="mk">Beacon Interval</span><span class="mv ${net.beacon_interval!==100?'amber':''}">${net.beacon_interval||100}ms ${net.beacon_interval!==100?'⚠ ANOMALY':''}</span></div>
+      <div class="mr"><span class="mk">Deauth Frames</span><span class="mv ${(net.deauth_frames||0)>10?'red':''}">${net.deauth_frames||0}</span></div>
+      <div class="mr"><span class="mk">Clock Skew</span><span class="mv ${(net.clock_skew||0)>0.8?'amber':''}">${(net.clock_skew||0).toFixed(3)}ms</span></div>
+    </div>
+    <div class="msec">
+      <div class="mstitle">RISK ASSESSMENT</div>
+      <div class="mr"><span class="mk">Risk Score</span><span class="mv ${rc==='hi'?'red':rc==='me'?'amber':''}">${net.risk_score||0}/100</span></div>
+      <div class="mr"><span class="mk">Risk Level</span><span class="mv ${rc==='hi'?'red':rc==='me'?'amber':''}">${net.risk_level||'LOW'}</span></div>
+      <div class="mr"><span class="mk">Classification</span><span class="mv ${net.is_rogue?'red':''}">${net.is_rogue?'ROGUE AP':'LEGITIMATE'}</span></div>
+    </div>
+    ${net.threat_reasons&&net.threat_reasons.length?`
+    <div class="msec">
+      <div class="mstitle">THREAT INDICATORS (${net.threat_reasons.length})</div>
+      ${net.threat_reasons.map(r=>`<div class="mr"><span class="mk" style="color:var(--ra)">›</span><span class="mv red" style="text-align:left;flex:1;word-break:break-all">${r}</span></div>`).join('')}
+    </div>`:''}
+    <div class="msec">
+      <div class="mstitle">RECOMMENDATION</div>
+      <div style="font-size:10px;color:${net.is_rogue?'var(--ra)':'var(--ng)'};line-height:1.8;padding:8px;background:${net.is_rogue?'rgba(255,0,60,.04)':'rgba(0,255,65,.04)'};border:1px solid ${net.is_rogue?'var(--bra)':'var(--bng)'};border-radius:3px">
+        ${net.is_rogue?'⚠ DO NOT CONNECT. Multiple rogue indicators detected. Report to network administrator immediately.':'✓ Network appears legitimate. Use VPN for sensitive data on any WiFi network.'}
+      </div>
+    </div>
+  `;
+  mb.classList.add('v');
+}
+function closeModal(e){if(e.target===document.getElementById('mbg'))document.getElementById('mbg').classList.remove('v')}
+
+// TAB SWITCHER
+function switchTab(id){
+  document.querySelectorAll('.tbtn').forEach((b,i)=>{b.classList.toggle('active',['scan','det','intel'][i]===id)});
+  document.querySelectorAll('.tc').forEach(c=>c.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+}
+// COLLAPSIBLE
+function toggleCol(id){document.getElementById(id).classList.toggle('collapsed')}
+</script>
+</body>
+</html>
