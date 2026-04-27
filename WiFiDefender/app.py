@@ -567,29 +567,44 @@ def login():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        username = request.form.get('username')
-        email = request.form.get('email')
-        password = request.form.get('password')
-        
-        if not username or not email or not password:
-            flash('All fields required', 'error')
-            return render_template('register.html')
-        
-        password_hash = generate_password_hash(password)
-        
         try:
+            username = request.form.get('username')
+            email = request.form.get('email')
+            password = request.form.get('password')
+            confirm_password = request.form.get('confirm_password')
+
+            # Validation
+            if not username or not email or not password:
+                flash('All fields required', 'error')
+                return render_template('register.html')
+
+            if password != confirm_password:
+                flash('Passwords do not match', 'error')
+                return render_template('register.html')
+
+            password_hash = generate_password_hash(password)
+
             conn = sqlite3.connect(DB_PATH)
             c = conn.cursor()
-            c.execute('INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)',
-                      (username, email, password_hash))
+            c.execute(
+                'INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)',
+                (username, email, password_hash)
+            )
             conn.commit()
             conn.close()
-            
+
             flash('Registration successful! Please login.', 'success')
             return redirect(url_for('login'))
+
         except sqlite3.IntegrityError:
             flash('Username or email already exists', 'error')
-    
+            return render_template('register.html')
+
+        except Exception as e:
+            print("🔥 REGISTER ERROR:", e)   # 👈 VERY IMPORTANT
+            flash('Something went wrong', 'error')
+            return render_template('register.html')
+
     return render_template('register.html')
 
 @app.route('/logout')
